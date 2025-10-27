@@ -91,7 +91,6 @@ export default function InvitationPage() {
   // 🚨 FIX: Use the correct data structure
   // The API returns: { success: true, guest: { event: { client_name, ... } } }
   const event = guestData.event || {};
-  
   // 🚨 FIX: Use only client_name, ignore partner_name
   const displayNames = event.client_name || 'The Couple';
 
@@ -114,15 +113,13 @@ export default function InvitationPage() {
         </h2>
         
         <p className="event-date">
-          {new Date(event.event_date).toLocaleDateString('en-US', {
+          {new Date(event.event_date).toLocaleDateString('en-PH', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
           })}
         </p>
-
-        <p className="venue">{event.venue}</p>
 
         <p className="instruction">
           Kindly confirm your attendance to reserve your seat.
