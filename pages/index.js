@@ -19,8 +19,22 @@ export default function InvitationPage() {
 
   const loadInvitation = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/event-plans/invitation/${eventId}/${guestId}/${token}`);
+      console.log('🔄 Loading invitation for:', { eventId, guestId, token });
+      
+      const response = await fetch(`${API_BASE}/api/event-plans/invitation/${eventId}/${guestId}/${token}`, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'  // 🚨 ADD THIS HEADER
+        }
+      });
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('📦 API response:', data);
 
       if (data.success) {
         setGuestData(data.guest);
@@ -28,8 +42,8 @@ export default function InvitationPage() {
         setMessage(data.error || 'Invalid invitation link');
       }
     } catch (error) {
-      console.error('Error loading invitation:', error);
-      setMessage('Failed to load invitation');
+      console.error('❌ Load invitation error:', error);
+      setMessage(`Failed to load invitation: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -43,7 +57,8 @@ export default function InvitationPage() {
       const response = await fetch(`${API_BASE}/api/event-plans/invitation/${eventId}/${guestId}/${token}/respond`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'  // 🚨 ADD THIS HEADER TOO
         },
         body: JSON.stringify({ status })
       });
