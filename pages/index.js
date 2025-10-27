@@ -151,48 +151,57 @@ export default function InvitationPage() {
       </div>
 
       <style jsx>{`
-        body {
-          margin: 0;
-          padding: 0;
-          background: linear-gradient(#FFF4F0, #FDF6ED, #FFF4F0);
-        }
-
-        p, h1, h2, h3, h4, h5, h6 {
-          text-wrap: balance;
-          margin: 0;
-          padding: 0;
-          overflow-wrap: break-word;
-        }
-
-        @font-face {
+      @font-face {
           font-family: 'sarasvati';
-          src: url('/fonts/Sarasvati.ttf');
-        }
+          src: url('/fonts/Sarasvati.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+      }
 
-        @font-face {
+      @font-face {
           font-family: 'newIconScript';
-          src: url('/fonts/NewIconScript.ttf');
-        }
+          src: url('/fonts/New Icon Script.ttf') format('truetype');  // FIXED
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+      }
 
-        @font-face {
+      @font-face {
           font-family: 'footlight';
-          src: url('/fonts/FootlightMTProLight.otf');
-        }
+          src: url('/fonts/FootlightMTProLight.otf') format('opentype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+      }
 
-        @font-face {
+      @font-face {
           font-family: 'centuryGothic';
-          src: url('/fonts/centurygothic.ttf');
-        }
+          src: url('/fonts/centurygothic.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;
+      }
 
-        .invitation-container {
-          height: 100vh;
-          display: flex;
-          overflow: hidden;
-          position: relative;
-          align-items: center;
-          flex-direction: row;
-          justify-content: center;
-        }
+      p, h1, h2, h3, h4, h5, h6 {
+        text-wrap: balance;
+        margin: 0;
+        padding: 0;
+        overflow-wrap: break-word;
+      }
+
+      .invitation-container { 
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        align-items: center;
+        flex-direction: row;  
+        justify-content: center;
+        background: linear-gradient(#FFF4F0, #FDF6ED, #FFF4F0);
+      }
 
         .invitation-container::before {
           z-index: 0;
