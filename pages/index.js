@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router' 
-
-const API_BASE = 'https://ela-untraceable-foresakenly.ngrok-free.dev';
+import { supabase } from '../lib/supabase'
 
 export default function InvitationPage() {
   const router = useRouter()
@@ -19,23 +18,49 @@ export default function InvitationPage() {
 
   const loadInvitation = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/event-plans/invitation/${eventId}/${guestId}/${token}`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      });
-      const data = await response.json();
+      // Convert IDs to numbers for database query
+      const numericEventId = parseInt(eventId)
+      const numericGuestId = parseInt(guestId)
 
-      if (data.success) {
-        setGuestData(data.guest);
+      // Query the database directly using your existing Supabase client
+      const { data, error } = await supabase
+        .from('event_guests')
+        .select(`
+          *,
+          event_plans (
+            client_name,
+            partner_name,
+            event_type,
+            event_date,
+            venue
+          )
+        `)
+        .eq('id', numericGuestId)
+        .eq('event_plan_id', numericEventId)
+        .eq('invite_token', token)
+        .single()
+
+      if (error) {
+        console.error('Error loading invitation:', error)
+        setMessage('Invalid invitation link')
+        return
+      }
+
+      if (data) {
+        setGuestData({
+          id: data.id,
+          guest_name: data.guest_name,
+          status: data.status,
+          event: data.event_plans
+        })
       } else {
-        setMessage(data.error || 'Invalid invitation link');
+        setMessage('Invalid invitation link')
       }
     } catch (error) {
-      console.error('Error loading invitation:', error);
-      setMessage('Failed to load invitation');
+      console.error('Error loading invitation:', error)
+      setMessage('Failed to load invitation')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -44,28 +69,28 @@ export default function InvitationPage() {
     
     setResponding(true)
     try {
-      const response = await fetch(`${API_BASE}/api/event-plans/invitation/${eventId}/${guestId}/${token}/respond`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        },
-        body: JSON.stringify({ status })
-      });
+      const numericGuestId = parseInt(guestId)
+      
+      // Update guest status directly in Supabase using your existing client
+      const { error } = await supabase
+        .from('event_guests')
+        .update({ 
+          status: status,
+          responded_at: new Date().toISOString()
+        })
+        .eq('id', numericGuestId)
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage(data.message);
-        setGuestData(prev => ({ ...prev, status }));
+      if (error) {
+        setMessage('Failed to send response')
       } else {
-        setMessage(data.error || 'Failed to send response');
+        setMessage(`Thank you! You have ${status.toLowerCase()} the invitation.`)
+        setGuestData(prev => ({ ...prev, status }))
       }
     } catch (error) {
-      console.error('Error responding to invitation:', error);
-      setMessage('Failed to send response');
+      console.error('Error responding to invitation:', error)
+      setMessage('Failed to send response')
     } finally {
-      setResponding(false);
+      setResponding(false)
     }
   }
 
