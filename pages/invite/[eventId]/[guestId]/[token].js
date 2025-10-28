@@ -23,58 +23,48 @@ export default function InvitationPage() {
         
         console.log('🔍 Looking for guest:', { eventId, guestId, token, numericEventId })
 
-        // First, let's check if the guest exists at all
-        const { data: guestCheck, error: guestError } = await supabase
+        // First find the guest
+        const { data: guest, error: guestError } = await supabase
         .from('event_guests')
         .select('*')
         .eq('mobile_guest_id', guestId)
         .eq('event_plan_id', numericEventId)
+        .eq('invite_token', token)
         .single()
 
-        console.log('🔍 GUEST CHECK:', { guestCheck, guestError })
+        console.log('📊 Guest result:', { guest, guestError })
 
-        // Then try the full query with event_plans
-        const { data, error } = await supabase
-            .from('event_guests')
-            .select(`
-                *,
-                event_plans!event_plan_id (
-                client_name,
-                partner_name,
-                event_type,
-                event_date
-                )
-            `)
-            .eq('mobile_guest_id', guestId)
-            .eq('event_plan_id', numericEventId)
-            .eq('invite_token', token)
-            .single()
-
-        console.log('📊 FULL QUERY RESULT:', { data, error })
-
-        if (error) {
-            console.error('❌ Database error:', error)
-            setMessage('Invalid invitation link')
-            return
+        if (guestError || !guest) {
+        console.error('❌ Guest not found:', guestError)
+        setMessage('Invalid invitation link')
+        return
         }
 
-        if (data) {
-        console.log('✅ Guest found:', data)
-        console.log('📅 Event plans data:', data.event_plans)
-        
-        const eventData = data.event_plans && data.event_plans[0] ? data.event_plans[0] : {};
-        
-        console.log('📅 Event data to display:', eventData)
-        
+        // Then find the event data separately
+        const { data: event, error: eventError } = await supabase
+        .from('event_plans')
+        .select('client_name, partner_name, event_type, event_date')
+        .eq('id', numericEventId)
+        .single()
+
+        console.log('📅 Event result:', { event, eventError })
+
+        if (eventError) {
+        console.error('❌ Event not found:', eventError)
+        // Still set guest data but event will be empty
         setGuestData({
-            id: data.id,
-            guest_name: data.guest_name,
-            status: data.status,
-            event: eventData
+            id: guest.id,
+            guest_name: guest.guest_name,
+            status: guest.status,
+            event: {}
         })
         } else {
-        console.log('❌ No guest found')
-        setMessage('Invalid invitation link')
+        setGuestData({
+            id: guest.id,
+            guest_name: guest.guest_name,
+            status: guest.status,
+            event: event
+        })
         }
     } catch (error) {
         console.error('❌ Error loading invitation:', error)
