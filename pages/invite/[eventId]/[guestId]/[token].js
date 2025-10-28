@@ -35,27 +35,27 @@ export default function InvitationPage() {
 
         // Then try the full query with event_plans
         const { data, error } = await supabase
-        .from('event_guests')
-        .select(`
-            *,
-            event_plans (
-            client_name,
-            partner_name,
-            event_type,
-            event_date
-            )
-        `)
-        .eq('mobile_guest_id', guestId)
-        .eq('event_plan_id', numericEventId)
-        .eq('invite_token', token)
-        .single()
+            .from('event_guests')
+            .select(`
+                *,
+                event_plans!event_plan_id (
+                client_name,
+                partner_name,
+                event_type,
+                event_date
+                )
+            `)
+            .eq('mobile_guest_id', guestId)
+            .eq('event_plan_id', numericEventId)
+            .eq('invite_token', token)
+            .single()
 
         console.log('📊 FULL QUERY RESULT:', { data, error })
 
         if (error) {
-        console.error('❌ Database error:', error)
-        setMessage('Invalid invitation link')
-        return
+            console.error('❌ Database error:', error)
+            setMessage('Invalid invitation link')
+            return
         }
 
         if (data) {
