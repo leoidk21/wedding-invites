@@ -18,47 +18,75 @@ export default function InvitationPage() {
 
   const loadInvitation = async () => {
     try {
-      const numericEventId = parseInt(eventId)
-      const numericGuestId = parseInt(guestId)
+        const numericEventId = parseInt(eventId)
+        
+        // Handle both string and numeric guest IDs
+        let guestQuery;
+        const numericGuestId = parseInt(guestId);
+        
+        if (isNaN(numericGuestId)) {
+        // Guest ID is a string - use mobile_guest_id
+        guestQuery = supabase
+            .from('event_guests')
+            .select(`
+            *,
+            event_plans (
+                client_name,
+                partner_name,
+                event_type,
+                event_date,
+                venue
+            )
+            `)
+            .eq('mobile_guest_id', guestId) // Use mobile_guest_id for string IDs
+            .eq('event_plan_id', numericEventId)
+            .eq('invite_token', token)
+        } else {
+        // Guest ID is a number - use id column
+        guestQuery = supabase
+            .from('event_guests')
+            .select(`
+            *,
+            event_plans (
+                client_name,
+                partner_name,
+                event_type,
+                event_date,
+                venue
+            )
+            `)
+            .eq('id', numericGuestId) // Use id for numeric IDs
+            .eq('event_plan_id', numericEventId)
+            .eq('invite_token', token)
+        }
 
-      const { data, error } = await supabase
-        .from('event_guests')
-        .select(`
-          *,
-          event_plans (
-            client_name,
-            partner_name,
-            event_type,
-            event_date,
-            venue
-          )
-        `)
-        .eq('id', numericGuestId)
-        .eq('event_plan_id', numericEventId)
-        .eq('invite_token', token)
-        .single()
+        const { data, error } = await guestQuery.single()
 
-      if (error) {
-        console.error('Error loading invitation:', error)
+        console.log('📊 Query result:', { data, error })
+
+        if (error) {
+        console.error('❌ Database error:', error)
         setMessage('Invalid invitation link')
         return
-      }
+        }
 
-      if (data) {
+        if (data) {
+        console.log('✅ Guest found:', data)
         setGuestData({
-          id: data.id,
-          guest_name: data.guest_name,
-          status: data.status,
-          event: data.event_plans
+            id: data.id,
+            guest_name: data.guest_name,
+            status: data.status,
+            event: data.event_plans
         })
-      } else {
+        } else {
+        console.log('❌ No guest found')
         setMessage('Invalid invitation link')
-      }
+        }
     } catch (error) {
-      console.error('Error loading invitation:', error)
-      setMessage('Failed to load invitation')
+        console.error('❌ Error loading invitation:', error)
+        setMessage('Failed to load invitation')
     } finally {
-      setLoading(false)
+        setLoading(false)
     }
   }
 
@@ -67,27 +95,28 @@ export default function InvitationPage() {
     
     setResponding(true)
     try {
-      const numericGuestId = parseInt(guestId)
-      
-      const { error } = await supabase
+        // Use the guest ID from the found data, not from URL
+        const guestIdToUpdate = guestData.id
+        
+        const { error } = await supabase
         .from('event_guests')
         .update({ 
-          status: status,
-          responded_at: new Date().toISOString()
+            status: status,
+            responded_at: new Date().toISOString()
         })
-        .eq('id', numericGuestId)
+        .eq('id', guestIdToUpdate) // Use the database ID
 
-      if (error) {
+        if (error) {
         setMessage('Failed to send response')
-      } else {
+        } else {
         setMessage(`Thank you! You have ${status.toLowerCase()} the invitation.`)
         setGuestData(prev => ({ ...prev, status }))
-      }
+        }
     } catch (error) {
-      console.error('Error responding to invitation:', error)
-      setMessage('Failed to send response')
+        console.error('Error responding to invitation:', error)
+        setMessage('Failed to send response')
     } finally {
-      setResponding(false)
+        setResponding(false)
     }
   }
 
