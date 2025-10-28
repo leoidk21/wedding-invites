@@ -23,7 +23,7 @@ export default function InvitationPage() {
         
         console.log('🔍 Looking for guest:', { eventId, guestId, token, numericEventId })
 
-        // First find the guest
+        // 1. Find the guest
         const { data: guest, error: guestError } = await supabase
         .from('event_guests')
         .select('*')
@@ -35,37 +35,28 @@ export default function InvitationPage() {
         console.log('📊 Guest result:', { guest, guestError })
 
         if (guestError || !guest) {
-        console.error('❌ Guest not found:', guestError)
         setMessage('Invalid invitation link')
         return
         }
 
-        // Then find the event data separately
+        // 2. Find the event SEPARATELY - ADD DEBUG HERE
+        console.log('🔍 Looking for event ID:', numericEventId)
         const { data: event, error: eventError } = await supabase
         .from('event_plans')
-        .select('client_name, partner_name, event_type, event_date')
+        .select('client_name, partner_name, event_date')
         .eq('id', numericEventId)
         .single()
 
         console.log('📅 Event result:', { event, eventError })
+        console.log('📅 Event data:', event)
 
-        if (eventError) {
-        console.error('❌ Event not found:', eventError)
-        // Still set guest data but event will be empty
+        // Set the guest data with the event data
         setGuestData({
-            id: guest.id,
-            guest_name: guest.guest_name,
-            status: guest.status,
-            event: {}
+        id: guest.id,
+        guest_name: guest.guest_name,
+        status: guest.status,
+        event: event || {} // Use the event data, or empty object if not found
         })
-        } else {
-        setGuestData({
-            id: guest.id,
-            guest_name: guest.guest_name,
-            status: guest.status,
-            event: event
-        })
-        }
     } catch (error) {
         console.error('❌ Error loading invitation:', error)
         setMessage('Failed to load invitation')
