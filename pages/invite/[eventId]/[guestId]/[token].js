@@ -119,8 +119,10 @@ export default function InvitationPage() {
     )
   }
 
-  const event = guestData.event || {};
-  const displayNames = event.client_name || 'The Couple';
+    const event = guestData.event || {};
+    const displayNames = event.client_name && event.partner_name 
+    ? `${event.client_name} & ${event.partner_name}`
+    : event.client_name || 'The Couple';
 
   return (
     <div className="invitation-container">
