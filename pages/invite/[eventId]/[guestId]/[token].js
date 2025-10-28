@@ -33,7 +33,6 @@ export default function InvitationPage() {
             partner_name,
             event_type,
             event_date,
-            venue
             )
         `)
         .eq('mobile_guest_id', guestId) // Always use mobile_guest_id
@@ -44,22 +43,30 @@ export default function InvitationPage() {
         console.log('📊 Query result:', { data, error })
 
         if (error) {
-        console.error('❌ Database error:', error)
-        setMessage('Invalid invitation link')
+            console.error('❌ Database error:', error)
+            setMessage('Invalid invitation link')
         return
         }
 
         if (data) {
-        console.log('✅ Guest found:', data)
-        setGuestData({
-            id: data.id,
-            guest_name: data.guest_name,
-            status: data.status,
-            event: data.event_plans
-        })
+            console.log('✅ Guest found:', data)
+            console.log('📅 Event plans data:', data.event_plans)
+            console.log('📅 First event plan:', data.event_plans && data.event_plans[0])
+            
+            // Get the first event plan object from the array
+            const eventData = data.event_plans && data.event_plans[0] ? data.event_plans[0] : {};
+            
+            console.log('📅 Event data to display:', eventData)
+            
+            setGuestData({
+                id: data.id,
+                guest_name: data.guest_name,
+                status: data.status,
+                event: eventData  // Use the object, not the array
+            })
         } else {
-        console.log('❌ No guest found')
-        setMessage('Invalid invitation link')
+            console.log('❌ No guest found')
+            setMessage('Invalid invitation link')
         }
     } catch (error) {
         console.error('❌ Error loading invitation:', error)
