@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { supabase } from '../../../../lib/supabase';
 
 export default function InvitationPage() {
+  console.log('🔗 [token].js is being used!')
   const router = useRouter()
   const { eventId, guestId, token } = router.query
   const [guestData, setGuestData] = useState(null)
@@ -20,47 +21,25 @@ export default function InvitationPage() {
     try {
         const numericEventId = parseInt(eventId)
         
-        // Handle both string and numeric guest IDs
-        let guestQuery;
-        const numericGuestId = parseInt(guestId);
-        
-        if (isNaN(numericGuestId)) {
-        // Guest ID is a string - use mobile_guest_id
-        guestQuery = supabase
-            .from('event_guests')
-            .select(`
-            *,
-            event_plans (
-                client_name,
-                partner_name,
-                event_type,
-                event_date,
-                venue
-            )
-            `)
-            .eq('mobile_guest_id', guestId) // Use mobile_guest_id for string IDs
-            .eq('event_plan_id', numericEventId)
-            .eq('invite_token', token)
-        } else {
-        // Guest ID is a number - use id column
-        guestQuery = supabase
-            .from('event_guests')
-            .select(`
-            *,
-            event_plans (
-                client_name,
-                partner_name,
-                event_type,
-                event_date,
-                venue
-            )
-            `)
-            .eq('id', numericGuestId) // Use id for numeric IDs
-            .eq('event_plan_id', numericEventId)
-            .eq('invite_token', token)
-        }
+        console.log('🔍 Looking for guest:', { eventId, guestId, token, numericEventId })
 
-        const { data, error } = await guestQuery.single()
+        // ALWAYS use mobile_guest_id since guestId from URL is always a string
+        const { data, error } = await supabase
+        .from('event_guests')
+        .select(`
+            *,
+            event_plans (
+            client_name,
+            partner_name,
+            event_type,
+            event_date,
+            venue
+            )
+        `)
+        .eq('mobile_guest_id', guestId) // Always use mobile_guest_id
+        .eq('event_plan_id', numericEventId)
+        .eq('invite_token', token)
+        .single()
 
         console.log('📊 Query result:', { data, error })
 
